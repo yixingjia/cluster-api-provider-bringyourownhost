@@ -102,12 +102,20 @@ func (r *ByoMachineReconciler) Reconcile(ctx context.Context, req reconcile.Requ
 	byoMachine.Status.Ready = true
 
 	conditions.MarkTrue(byoMachine, infrastructurev1alpha4.HostReadyCondition)
-	//fmt.Println(byoMachine.Status)
+	fmt.Println(byoMachine.Status)
+
+	defer PatchForByoMachine(ctx, byoMachine, helper)
+
+	return ctrl.Result{}, nil
+}
+
+func PatchForByoMachine(ctx context.Context, byoMachine *infrastructurev1alpha4.ByoMachine, helper *patch.Helper) {
 	err := helper.Patch(ctx, byoMachine)
 	if err != nil {
 		fmt.Printf("err: %s", err.Error())
+
 	}
-	return ctrl.Result{}, nil
+
 }
 
 func (r *ByoMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
@@ -117,9 +125,9 @@ func (r *ByoMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *ByoMachineReconciler) setNodeProviderID(ctx context.Context, remoteClient client.Client, host infrastructurev1alpha4.ByoHost, providerID string) error {
-
 	node := &corev1.Node{}
 	key := client.ObjectKey{Name: host.Name, Namespace: host.Namespace}
+
 	err := remoteClient.Get(ctx, key, node)
 	if err != nil {
 		return err
